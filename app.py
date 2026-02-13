@@ -15,22 +15,51 @@ from urllib.parse import urlencode, urlparse, urlunparse
 BASE64_CHARS = string.ascii_letters + string.digits + "-_"
 
 
-def generate_gclid() -> str:
-    prefix = "Cj0KCQi"
-    suffix = "".join(random.choices(BASE64_CHARS, k=random.randint(80, 100)))
-    return prefix + suffix
+def generate_gclid_long() -> str:
+    """Generate long gclid format (~100+ chars).
+    Example: Cj0KCQiA19G9BhCHARIsAH...wE
+    """
+    prefix = "Cj0KCQiA"
+    middle = "".join(random.choices(BASE64_CHARS, k=random.randint(85, 100)))
+    suffix = random.choice(["wE", "QE", "gE", "AE", "wB", "QB"])
+    return prefix + middle + suffix
+
+
+def generate_gclid_short() -> str:
+    """Generate short gclid format (~50-70 chars).
+    Example: EAIaIQobChMI...wE
+    """
+    prefix = "EAIaIQobChMI"
+    middle = "".join(random.choices(BASE64_CHARS, k=random.randint(35, 50)))
+    suffix = random.choice(["wE", "QE", "gE", "AE", "wB", "QB"])
+    return prefix + middle + suffix
+
+
+def generate_gclid(short=False) -> str:
+    """Generate gclid - short or long format."""
+    return generate_gclid_short() if short else generate_gclid_long()
 
 
 def generate_wbraid() -> str:
-    prefix = "CjwKCAjw"
-    suffix = "".join(random.choices(BASE64_CHARS, k=random.randint(30, 50)))
-    return prefix + suffix
+    """Generate realistic wbraid based on real examples.
+    Format: ClQKCQiAkbbMBhCGARJDAF9F4N + ~90 chars + hoC/BoC + 2-3 chars
+    """
+    prefix = "ClQKCQiAkbbMBhCGARJDAF9F4N"
+    middle = "".join(random.choices(BASE64_CHARS, k=random.randint(85, 95)))
+    suffix_prefix = random.choice(["hoC", "BoC", "xoC", "RoC"])
+    suffix = "".join(random.choices(BASE64_CHARS, k=random.randint(2, 3)))
+    return prefix + middle + suffix_prefix + suffix
 
 
 def generate_gbraid() -> str:
-    prefix = "CjwKCAjw"
-    suffix = "".join(random.choices(BASE64_CHARS, k=random.randint(30, 50)))
-    return prefix + suffix
+    """Generate realistic gbraid based on real examples.
+    Format: ClQKCQiAkbbMBhCGARJDAF9F4N + ~90 chars + hoC/BoC + 2-3 chars
+    """
+    prefix = "ClQKCQiAkbbMBhCGARJDAF9F4N"
+    middle = "".join(random.choices(BASE64_CHARS, k=random.randint(85, 95)))
+    suffix_prefix = random.choice(["hoC", "BoC", "xoC", "RoC"])
+    suffix = "".join(random.choices(BASE64_CHARS, k=random.randint(2, 3)))
+    return prefix + middle + suffix_prefix + suffix
 
 
 def generate_campid() -> str:
@@ -71,6 +100,7 @@ def init_session_state():
     defaults = {
         "base_url": "https://google.com",
         "add_gclid": True,  # Default ON
+        "gclid_type": "long",  # long or short
         "add_wbraid": False,
         "add_gbraid": False,
         "add_gad_source": True,  # Default ON
@@ -94,7 +124,8 @@ def reset_all():
 
 
 def regenerate_hashes():
-    st.session_state.gclid_value = generate_gclid()
+    is_short = st.session_state.get("gclid_type", "long") == "short"
+    st.session_state.gclid_value = generate_gclid(short=is_short)
     st.session_state.wbraid_value = generate_wbraid()
     st.session_state.gbraid_value = generate_gbraid()
     st.rerun()
@@ -132,17 +163,19 @@ def main():
     # Base URL
     st.text_input("Base URL", value=st.session_state.base_url, key="base_url", label_visibility="collapsed", placeholder="https://example.com")
     
-    # Toggles - compact 5 columns
-    c1, c2, c3, c4, c5 = st.columns([1, 1, 1, 1, 1])
+    # Toggles - compact 6 columns
+    c1, c2, c3, c4, c5, c6 = st.columns([1, 1, 1, 1, 1, 1])
     with c1:
         st.checkbox("gclid", value=st.session_state.add_gclid, key="add_gclid")
     with c2:
-        st.checkbox("wbraid", value=st.session_state.add_wbraid, key="add_wbraid")
+        st.selectbox("type", options=["long", "short"], index=["long", "short"].index(st.session_state.gclid_type), key="gclid_type", label_visibility="collapsed")
     with c3:
-        st.checkbox("gbraid", value=st.session_state.add_gbraid, key="add_gbraid")
+        st.checkbox("wbraid", value=st.session_state.add_wbraid, key="add_wbraid")
     with c4:
-        st.checkbox("gad_source", value=st.session_state.add_gad_source, key="add_gad_source")
+        st.checkbox("gbraid", value=st.session_state.add_gbraid, key="add_gbraid")
     with c5:
+        st.checkbox("gad_source", value=st.session_state.add_gad_source, key="add_gad_source")
+    with c6:
         st.selectbox("value", options=["1", "2", "3", "4"], index=["1", "2", "3", "4"].index(st.session_state.gad_source_value), key="gad_source_value", label_visibility="collapsed")
     
     # Custom params - compact 3 columns
