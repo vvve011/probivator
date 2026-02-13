@@ -167,31 +167,9 @@ def main():
     final_url = build_current_url()
     js_code = generate_js_injection(final_url)
     
-    # Output - URL (resizable text area)
-    st.markdown("**Final URL:**")
-    st.text_area("url_output", value=final_url, height=80, label_visibility="collapsed", key="url_display")
-    
-    # Copy URL button with actual clipboard functionality
-    url_escaped = final_url.replace("'", "\\'").replace('"', '\\"')
-    st.markdown(f'''
-        <button onclick="navigator.clipboard.writeText('{url_escaped}').then(() => alert('URL copied!'))" 
-                style="background:#4CAF50;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;margin-bottom:10px;">
-            📋 Copy URL
-        </button>
-    ''', unsafe_allow_html=True)
-    
-    # JS Code (resizable text area)
-    st.markdown("**JS Injection Code:**")
-    st.text_area("js_output", value=js_code, height=80, label_visibility="collapsed", key="js_display")
-    
-    # Copy JS button with actual clipboard functionality
-    js_escaped = js_code.replace("'", "\\'").replace('"', '\\"').replace('\n', '\\n')
-    st.markdown(f'''
-        <button onclick="navigator.clipboard.writeText('{js_escaped}').then(() => alert('JS code copied!'))" 
-                style="background:#2196F3;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;">
-            📋 Copy JS Code
-        </button>
-    ''', unsafe_allow_html=True)
+    # Output
+    st.code(final_url, language="text")
+    st.code(js_code, language="javascript")
 
 
 if __name__ == "__main__":
