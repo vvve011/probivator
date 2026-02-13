@@ -134,11 +134,11 @@ def main():
     # Custom params - compact 3 columns
     p1, p2, p3 = st.columns(3)
     with p1:
-        st.text_input("campid", value=st.session_state.campid, key="campid", label_visibility="collapsed", placeholder="campid")
+        st.text_input("campid", value=st.session_state.campid, key="campid")
     with p2:
-        st.text_input("keyword", value=st.session_state.keyword, key="keyword", label_visibility="collapsed", placeholder="keyword")
+        st.text_input("keyword", value=st.session_state.keyword, key="keyword")
     with p3:
-        st.text_input("placement", value=st.session_state.placement, key="placement", label_visibility="collapsed", placeholder="placement")
+        st.text_input("placement", value=st.session_state.placement, key="placement")
     
     # Buttons - same row
     btn1, btn2 = st.columns(2)
