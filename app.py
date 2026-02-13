@@ -37,7 +37,18 @@ def generate_campid() -> str:
     return "".join(random.choices(string.digits, k=10))
 
 
+def ensure_https(url: str) -> str:
+    """Add https:// if no scheme is present."""
+    url = url.strip()
+    if not url:
+        return url
+    if not url.startswith(("http://", "https://")):
+        return "https://" + url
+    return url
+
+
 def build_url(base_url: str, params: dict) -> str:
+    base_url = ensure_https(base_url)
     filtered_params = {k: v for k, v in params.items() if v}
     if not filtered_params:
         return base_url
@@ -63,6 +74,7 @@ def init_session_state():
         "add_wbraid": False,
         "add_gbraid": False,
         "add_gad_source": True,  # Default ON
+        "gad_source_value": "1",  # Default value
         "campid": generate_campid(),
         "keyword": "",
         "placement": "",
@@ -97,7 +109,7 @@ def build_current_url() -> str:
     if st.session_state.add_gbraid:
         params["gbraid"] = st.session_state.gbraid_value
     if st.session_state.add_gad_source:
-        params["gad_source"] = "1"
+        params["gad_source"] = st.session_state.gad_source_value
     if st.session_state.campid:
         params["campid"] = st.session_state.campid
     if st.session_state.keyword:
@@ -120,8 +132,8 @@ def main():
     # Base URL
     st.text_input("Base URL", value=st.session_state.base_url, key="base_url", label_visibility="collapsed", placeholder="https://example.com")
     
-    # Toggles - compact 4 columns
-    c1, c2, c3, c4 = st.columns(4)
+    # Toggles - compact 5 columns
+    c1, c2, c3, c4, c5 = st.columns([1, 1, 1, 1, 1])
     with c1:
         st.checkbox("gclid", value=st.session_state.add_gclid, key="add_gclid")
     with c2:
@@ -130,6 +142,8 @@ def main():
         st.checkbox("gbraid", value=st.session_state.add_gbraid, key="add_gbraid")
     with c4:
         st.checkbox("gad_source", value=st.session_state.add_gad_source, key="add_gad_source")
+    with c5:
+        st.selectbox("value", options=["1", "2", "3", "4"], index=["1", "2", "3", "4"].index(st.session_state.gad_source_value), key="gad_source_value", label_visibility="collapsed")
     
     # Custom params - compact 3 columns
     p1, p2, p3 = st.columns(3)
@@ -153,9 +167,31 @@ def main():
     final_url = build_current_url()
     js_code = generate_js_injection(final_url)
     
-    # Output
-    st.code(final_url, language="text")
-    st.code(js_code, language="javascript")
+    # Output - URL (resizable text area)
+    st.markdown("**Final URL:**")
+    st.text_area("url_output", value=final_url, height=80, label_visibility="collapsed", key="url_display")
+    
+    # Copy URL button with actual clipboard functionality
+    url_escaped = final_url.replace("'", "\\'").replace('"', '\\"')
+    st.markdown(f'''
+        <button onclick="navigator.clipboard.writeText('{url_escaped}').then(() => alert('URL copied!'))" 
+                style="background:#4CAF50;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;margin-bottom:10px;">
+            📋 Copy URL
+        </button>
+    ''', unsafe_allow_html=True)
+    
+    # JS Code (resizable text area)
+    st.markdown("**JS Injection Code:**")
+    st.text_area("js_output", value=js_code, height=80, label_visibility="collapsed", key="js_display")
+    
+    # Copy JS button with actual clipboard functionality
+    js_escaped = js_code.replace("'", "\\'").replace('"', '\\"').replace('\n', '\\n')
+    st.markdown(f'''
+        <button onclick="navigator.clipboard.writeText('{js_escaped}').then(() => alert('JS code copied!'))" 
+                style="background:#2196F3;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;">
+            📋 Copy JS Code
+        </button>
+    ''', unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
